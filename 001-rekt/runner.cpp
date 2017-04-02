@@ -1,3 +1,5 @@
+// g++ -O3 -rdynamic -o runner runner.cpp -ldl
+
 #include <dlfcn.h>
 
 #include <cstdlib>
@@ -102,15 +104,16 @@ int main(int argc, char *argv[])
 
   // get results
   results(g_pcOutBuf);
-  cerr << "Checking results..." << endl;
+  cerr << "Checking results...";
 
   ifstream fileRes(sFileResults);
   string sTest((istreambuf_iterator<char>(fileRes)), istreambuf_iterator<char>());
   string sResults(g_pcOutBuf);
 
+  
   if(sTest == sResults)
   {
-    cerr << "Results OK" << endl;
+    cerr << "OK" << endl;
     long long microseconds = chrono::duration_cast<std::chrono::microseconds>(tmElapsed).count();
     long ms = microseconds/1000;
     cerr << microseconds/1000 << " ms elapsed" << endl;
@@ -118,7 +121,7 @@ int main(int argc, char *argv[])
   }
   else
   {
-    cerr << "Results NOT OK" << endl;
+    cerr << "NOT OK" << endl;
   }
   
   return 0;
