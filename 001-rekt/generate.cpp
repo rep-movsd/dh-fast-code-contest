@@ -1,3 +1,5 @@
+//g++ -O3 --std=c++11 -static -static-libgcc -static-libstdc++ -ogenerate generate.cpp
+
 #include <cstdint>
 #include <cstdlib>
 #include <cstdio>
@@ -198,10 +200,7 @@ int main(int argc, char** argv)
       {
         ifs >> i->x >> i->y >> i->rank;
       }
-      
-      auto start = std::chrono::high_resolution_clock::now();
-     
-      
+            
       // Calculate all the solutions after sorting by rank
       sort(pPointsBeg, pPointsEnd, [](const Point &p1, const Point &p2){return p1.rank < p2.rank;});
       
@@ -223,13 +222,6 @@ int main(int argc, char** argv)
           }
         }
       }
-      
-      auto elapsed = std::chrono::high_resolution_clock::now() - start;
-      long long microseconds = std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();
-      
-      long ms = microseconds/1000;
-      cout << microseconds/1000 << " ms elapsed" << endl;
-      cout << float(ms)/nRects << " ms per rect" << endl;
       
       ofstream ofs(sGUID + "-results.txt");
       for(int n = 0; n < nRects; ++n)
