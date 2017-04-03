@@ -7,6 +7,8 @@
 #include <cstring>
 using namespace std;
 
+
+// Our DS are aligned at byte boundaries
 #pragma pack(push)
 
 #pragma pack(1)
@@ -27,12 +29,15 @@ struct TRect
 
 #pragma pack(pop)
 
+// Points and results 
 vector<TPoint> arrPts;
 vector<vector<int>> arrResults;
 
 
+// Export this as C style calling convention
 extern "C" void init(const char *pszFileName)
 {
+  // Read the data store in the vector
   cerr << "Loading points from "  << pszFileName << endl;
   
   TPoint pt;
@@ -44,6 +49,7 @@ extern "C" void init(const char *pszFileName)
   
   cerr << "Loaded " << arrPts.size() << " points" << endl;
   
+  // Sort by rank
   cerr << "Sorting...";
   sort(begin(arrPts), end(arrPts), [](const TPoint &p1, const TPoint &p2){return p1.rank < p2.rank;});
   cerr << " done!" << endl;
@@ -56,13 +62,13 @@ extern "C" void run(const TRect* pRects, size_t nRects)
   cerr << "Processing ..." << endl;
   arrResults.resize(nRects);
 
+  // Iterate over each point
   auto pPointsBeg = begin(arrPts), i = pPointsBeg;
   auto pPointsEnd = end(arrPts);
   
   for(int id = 0; i != pPointsEnd; ++i, ++id)
   {
-    
-    // See if this point is part of solution for any rect
+    // See if this point is part of solution for any rect and add it to the solution
     for(int n = 0; n < nRects; ++n)
     {
       const auto &rc = pRects[n];
@@ -80,6 +86,7 @@ extern "C" void run(const TRect* pRects, size_t nRects)
   cerr << "Done ..." << endl;
 }
 
+// Dump the results to the output
 extern "C" void results(char *pBuf)
 {
   ostringstream oss;
