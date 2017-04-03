@@ -4,7 +4,7 @@
 
 A simple problem statement and test data generator is provided and you have 4 weeks in which you can submit as many solutions as you like.
 
-A total of INR 10101.01 will be given to the winners (maximum two winners) 
+A monetary prize will be given to the winners (maximum two winners) - Amounts will be discussed on the slack channel
 
 
 The submissions will be divided into 2 categories based on langauge demographics
@@ -100,10 +100,11 @@ Then you can run the test as follows:
 
 #### Prize money
 
-The prize is divided between the top winners of two groups, 5050.50 each.
+The prize is divided between the top winners of two groups equally.
 
-The winning entries have to have at least 5% better speed than the next best program. Otherwise we have a tie and the 5050.50 is divided amongst the tied people.
+The winning entries have to have at least 5% better speed than the next best program. 
+Otherwise we have a tie and the prize chunk is divided amongst the tied people.
 
-If someones dynamic program takes top spot, entire prize money of 10101.01 goes to them.
+If someones dynamic program takes top spot, entire prize money goes to them.
 
 
