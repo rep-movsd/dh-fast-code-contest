@@ -10,7 +10,9 @@ Your module need to contain 3 functions:
     - We pass a list of rectangles, where each rectangle
       is represented by a tuple: (x1, x2, y1, y2)
 3. results
-    - We pass the path to the file where you must write your results
+    - You return a list of list of ranks
+    - The ranks must be sorted (the inner list)
+    - eg: `[[], [1.0, 5.0] ... ]`
 
 ## Instructions for testing/running your python module
 
