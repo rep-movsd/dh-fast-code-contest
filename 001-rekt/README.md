@@ -1,5 +1,5 @@
 
-####Intro
+#### Intro
 
 
 A simple problem statement and test data generator is provided and you have 4 weeks in which you can submit as many solutions as you like.
@@ -38,12 +38,13 @@ If anyone has suggestions for this, let me know - perhaps AWS or some remote ser
 
 You are given a file containing millions of rows each describing a point in 2D space:
 
-X Y rank
-X Y rank
-...
+    X Y rank
+    X Y rank
+    ...
 
 X and Y are floating point values in the range
--10000000000.0 <= val <= 10000000000.0   
+    
+    -10000000000.0 <= val <= 10000000000.0   
 
 rank is an integer, unique for each row, higher rank means lower value.... i.e. 0th rank is the highest possible 
 
@@ -51,9 +52,9 @@ You are then given a list of rectangles, and for each rectangle, you need to fin
 
 Your implementation needs to provide 2 APIs
 
-1) init(filename) - reads the input file, sets up any data structures etc.
-2) run(list of rects) - calculates the 20 highest ranked points for the given rectangles
-3) results() - returns the calculated results
+ * init(filename) - reads the input file, sets up any data structures etc.
+ * run(list of rects) - calculates the 20 highest ranked points for the given rectangles
+ * results() - returns the calculated results
 
 A generator program is included - you can use the static binary on Linux, or compile generate.cpp as follows
     
@@ -97,7 +98,7 @@ Then you can run the test as follows:
 
 ---
 
-####Prize money
+#### Prize money
 
 The prize is divided between the top winners of two groups, 5050.50 each.
 
