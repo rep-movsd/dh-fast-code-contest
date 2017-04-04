@@ -14,9 +14,7 @@ N = 100 # rect size, needed to find avg time per rect
 GUID = '12345678-12345678-12345678-12345678-12345678'
 POINT_FILE_PATH = GUID + '-points.txt'
 REKT_FILE_PATH = GUID + '-rects.txt'
-USER_RES_FILE_PATH = GUID + '-user-results.txt' # user result values
-SECRET = 'oxalorg' # change this in production, so that someone does not just overwrite results file
-RES_FILE_PATH = GUID + '-' + SECRET + '-results.txt'
+RES_FILE_PATH = GUID + '-results.txt'
 
 
 def get_rekt():
@@ -39,7 +37,7 @@ def init_user(mod):
     init(POINT_FILE_PATH)
 
 
-def run_user(mod):
+def run_user(mod, rekts):
     """
     Calls 'user' function from user module.
     We pass a list of rectangles, where each rectangle
@@ -55,10 +53,11 @@ def run_user(mod):
 def results_user(mod):
     """
     Calls 'results' function from user module.
-    We pass the path to the file where you must write your results
+    Your function must return a list of list of ranks
+    eg: [[], [1.0, 5.0] ... ]
     """
     results = getattr(mod, 'results')
-    results(USER_RES_FILE_PATH)
+    return results()
 
 
 if __name__ == '__main__':
@@ -70,19 +69,15 @@ if __name__ == '__main__':
     rekts = get_rekt()
 
     init_user(mod)
-    time_elapsed = run_user(mod)
-    results_user(mod)
+    time_elapsed = run_user(mod, rekts)
+    user_results = results_user(mod)
 
     # Validate if their ans is correct or not
-    res_points = []
-    user_res_points = []  # user results
+    actual_results = []
     with open(RES_FILE_PATH) as fp:
-        res_points = [tuple(map(float, res.strip().split())) for res in fp]
+        actual_results = [list(map(float, res.strip().split())) for res in fp]
 
-    with open(USER_RES_FILE_PATH) as fp:
-        user_res_points = [tuple(map(float, res.strip().split())) for res in fp]
-
-    if user_res_points == res_points:
+    if user_results == actual_results:
         print('Avg time: ', time_elapsed / float(N))
         print('Ttl time: ', time_elapsed)
     else:
