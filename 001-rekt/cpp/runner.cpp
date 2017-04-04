@@ -45,12 +45,7 @@ bool readRectangles(const char path[], std::vector<Rectangle> &rectangles)
 			std::cerr << "Reading rectangles failed\n";
 			return false;
 		}
-
-		if (x1 < x2) {
-			rectangles.emplace_back(x1, y1, x2, y2);
-		} else {
-			rectangles.emplace_back(x2, y2, x1, y1);
-		}
+		rectangles.emplace_back(x1, y1, x2, y2);
 	}
 	return true;
 }
