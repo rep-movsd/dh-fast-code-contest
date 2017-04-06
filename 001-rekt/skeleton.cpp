@@ -46,20 +46,12 @@ extern "C" void init(const char *pszFileName)
   {
     arrPts.push_back(pt);
   }
-  
-  cerr << "Loaded " << arrPts.size() << " points" << endl;
-  
-  // Sort by rank
-  cerr << "Sorting...";
   sort(begin(arrPts), end(arrPts), [](const TPoint &p1, const TPoint &p2){return p1.rank < p2.rank;});
-  cerr << " done!" << endl;
-  
   arrResults.reserve(10000);
 }
 
 extern "C" void run(const TRect* pRects, size_t nRects)
 {
-  cerr << "Processing ..." << endl;
   arrResults.resize(nRects);
 
   // Iterate over each point
@@ -82,8 +74,6 @@ extern "C" void run(const TRect* pRects, size_t nRects)
       }
     }
   }
-  
-  cerr << "Done ..." << endl;
 }
 
 // Dump the results to the output

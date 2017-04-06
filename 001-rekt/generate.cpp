@@ -13,8 +13,10 @@
 #include <algorithm>
 #include <iomanip> 
 #include <chrono>
+#include <random>
 
 using namespace std;
+
 
 struct Point
 {
@@ -31,30 +33,16 @@ struct Rect
   float hy;
 };
 
+
 typedef unsigned int uint;
 static const float pi = 3.141592653589793238462643383279502884197169399375105820974944f;
 static float sqr(const float f) { return f * f; }
-static inline uint l(const uint t, const uint k) { return t ^ (t << k); }
-static inline uint r(const uint t, const uint k) { return t ^ (t >> k); }
-struct S_seed { uint x, y, z, w, v; };
-static S_seed seed = { 123456789, 362436069, 521288629, 88675123, 886756453, }; 
 
-static void randomize_seed()
-{
-  time_t t = time(nullptr);
-  srand(t);
-  seed.x = seed.x ^ rand();
-  seed.y = seed.y ^ rand();
-  seed.z = seed.z ^ rand();
-  seed.w = seed.w ^ rand();
-  seed.v = seed.v ^ rand();
-}
+std::mt19937 rnd;
 
-static uint xrandom() 
+uint xrandom()
 {
-  const uint n=l(seed.v,6)^l(r(seed.x,7),13);
-  seed.x=seed.y; seed.y=seed.z; seed.z=seed.w; seed.w=seed.v; seed.v=n;
-  return (seed.y+seed.y+1)*seed.v;
+  return rnd();
 }
 
 static float xrandom(const float l, const float h)
@@ -82,7 +70,7 @@ int main(int argc, char** argv)
     "Usage:"
     "\tgenerate <P> <R> <GUID> \n"
     "\tGenerates P points and R rectangles using GUID as the random seed\n"
-    "\t<GUID> is a HEX GUID in the format XXXXXXXX-XXXXXXXX-XXXXXXXX-XXXXXXXX-XXXXXXXX\n"
+    "\t<GUID> is a HEX GUID in the format XXXXXXXX\n"
     "\tSpecify - as GUID to automatically seed the RNG\n\n"
     "Output files are named as <GUID>-points.txt <GUID>-rects.txt and <GUID>-result.txt\n";
     "If R or P is 0 then existing files are not overwritten\n";
@@ -93,21 +81,26 @@ int main(int argc, char** argv)
   string sGUID = argv[3];
   int nPoints=stoi(argv[1]);
   int nRects=stoi(argv[2]);
+  int seed;
   
   // Parse GUID if amy
   if(sGUID == "-")
   {
     char s[256];
-    randomize_seed();
-    sprintf(s, "%X-%X-%X-%X-%X", seed.x, seed.y, seed.z, seed.w, seed.v);
+    rnd.seed(time(nullptr));
+    seed = rnd();
+    
+    sprintf(s, "%X", seed);
     sGUID = s;
   }
   else
   {
-    sscanf(sGUID.c_str(), "%X-%X-%X-%X-%X", &seed.x, &seed.y, &seed.z, &seed.w, &seed.v);
+    sscanf(sGUID.c_str(), "%X", &seed);
   }
+  
+  rnd.seed(seed);
    
-  printf("Random seed : %X-%X-%X-%X-%X\n", seed.x, seed.y, seed.z, seed.w, seed.v);
+  printf("Random seed : %X\n", seed);
     
   const float r = 1e3;
   Rect rcMain = xrandom(-r, +r, -r, +r);
@@ -124,6 +117,7 @@ int main(int argc, char** argv)
       arrRects.push_back(r);
       ofs << setprecision(8) << fixed << r.lx << " " << r.hx << " " << r.ly << " " << r.hy << "\n";
     }
+    
   }
     
   if(nPoints)
@@ -135,7 +129,8 @@ int main(int argc, char** argv)
     Point* pPointsEnd = arrPoints + nPoints;
     
     vector<vector<int>> arrResults(nRects);
-
+    
+    float lx=0, ly=0, hx=0, hy=0;
     int rank = 0;
     int done = 0;
     Point* i = pPointsBeg;
@@ -158,7 +153,6 @@ int main(int argc, char** argv)
         i->rank = rank++;
         i->x = fClusterOrgX + cos(angle) * range;
         i->y = fClusterOrgY + sin(angle) * range;
-     
       }
     }
 
