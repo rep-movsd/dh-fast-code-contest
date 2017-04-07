@@ -115,9 +115,9 @@ int main(int argc, char *argv[])
   {
     cerr << "OK" << endl;
     long long microseconds = chrono::duration_cast<std::chrono::microseconds>(tmElapsed).count();
-    long ms = microseconds/1000;
-    cerr << microseconds/1000 << " ms elapsed" << endl;
-    cerr << float(ms)/nRects << " ms per rect" << endl;
+    float ms = microseconds/1000.0;
+    cerr << ms << " ms elapsed" << endl;
+    cerr << (ms/nRects) << " ms per rect" << endl;
   }
   else
   {
