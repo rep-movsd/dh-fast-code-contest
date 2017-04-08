@@ -14,18 +14,19 @@
 #include <iomanip> 
 #include <chrono>
 #include <random>
+#include <xmmintrin.h>
 
 using namespace std;
 
 
-struct Point
+struct __attribute__((aligned(16)))  Point
 {
   int32_t rank;
   float x;
   float y;
 };
 
-struct Rect
+struct __attribute__((aligned(16))) Rect
 {
   float lx;
   float ly;
@@ -201,15 +202,24 @@ int main(int argc, char** argv)
       int id;
       for(id = 0,i = pPointsBeg; i != pPointsEnd; ++i, ++id)
       {
+        const auto &pt = *i;
+        __v4sf v4pt = {pt.x,  pt.x, pt.y,  pt.y};
         
         // See if this point is part of solution for any rect
         for(int n = 0; n < nRects; ++n)
         {
           const auto &rc = arrRects[n];
+          __v4sf v4RC = {rc.lx, rc.hx,  rc.ly, rc.hy};
+          
+          // lxhxlyhy
+          // pxpxpypy  >=
+          // yynnyynn -> 1010 -> 0x5
+          
           if(arrResults[n].size() < 20)
           {
-            bool isIn = rc.lx <= i->x && i->x <= rc.hx && rc.ly <= i->y && i->y <= rc.hy;
-            if(isIn)
+            //bool isIn = rc.lx <= i->x && i->x < rc.hx && rc.ly <= i->y && i->y < rc.hy;
+            //if(isIn)
+            if(0x05 == _mm_movemask_ps(v4pt >= v4RC))
             {
               arrResults[n].push_back(id);
             }
