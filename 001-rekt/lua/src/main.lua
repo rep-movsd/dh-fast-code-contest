@@ -2,7 +2,10 @@
 --  dh-fastest-code-content
 --]]
 
-local utils = require("src/utils")
+-- required to enable imports from the src directory
+package.path = "./src/?.lua;"..package.path
+
+local utils = require("utils")
 
 local exports = {}
 local internals = {
@@ -21,6 +24,7 @@ function exports.init(filename)
             y = pdata[2],
             rank = pdata[3]
         }
+
         table.insert(internals.points, point)
     end
 
@@ -34,7 +38,7 @@ end
 function exports.run(rects)
 end
 
-function exports.results()
+function exports.results(buffer)
 end
 
 return exports

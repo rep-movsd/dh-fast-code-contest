@@ -37,7 +37,16 @@ void init(const char *filepath)
         exit(-1);
     }
 
-    /* everything upto this point should work */
+    lua_getfield(L, -1, "init");
+
+    if ( !lua_isfunction(L, -1) ) {
+        fprintf(stderr, "error: init must be a function\n");
+        exit(-1);
+    }
+    
+    lua_pushstring(L, filepath);
+    lua_call(L, 1, 0);
 }
+
 void run(struct Rect *rects, size_t size);
 void results(char *buffer);

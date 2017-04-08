@@ -1,2 +1,2 @@
 void init(char *);
-int main() { init(""); return 0;}
+int main() { init("../F960E237-points.txt"); return 0;}
