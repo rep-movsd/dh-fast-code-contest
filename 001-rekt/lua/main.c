@@ -48,5 +48,47 @@ void init(const char *filepath)
     lua_call(L, 1, 0);
 }
 
-void run(struct Rect *rects, size_t size);
-void results(char *buffer);
+void run(struct Rect *rects, size_t size)
+{
+    lua_getfield(L, -1, "run");
+    if ( !lua_isfunction(L, -1) ) {
+        fprintf(stderr, "error: run must be a function\n");
+        exit(-1);
+    }
+
+    lua_createtable(L, size, 0);
+
+    for ( int i = 0; i < size; ++i ) {
+
+        // we'll use this after we're done adding properties to the current table
+        lua_pushnumber(L, i+1);
+        lua_createtable(L, 0, 4);
+
+        lua_pushstring(L, "lx");
+        lua_pushnumber(L, rects[i].lx);
+        lua_settable(L, -3);
+
+
+        lua_pushstring(L, "ly");
+        lua_pushnumber(L, rects[i].ly);
+        lua_settable(L, -3);
+
+
+        lua_pushstring(L, "hx");
+        lua_pushnumber(L, rects[i].hx);
+        lua_settable(L, -3);
+
+        lua_pushstring(L, "hy");
+        lua_pushnumber(L, rects[i].hy);
+        lua_settable(L, -3);
+
+        lua_settable(L, -3);
+    }
+
+    lua_call(L, 1, 0);
+}
+
+void results(char *buffer)
+{
+    ;
+}
