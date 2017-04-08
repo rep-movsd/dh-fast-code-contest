@@ -110,7 +110,7 @@ mingw:
 	$(MAKE) "LUAC_T=luac.exe" luac.exe
 
 posix:
-	$(MAKE) all MYCFLAGS=-DLUA_USE_POSIX
+	$(MAKE) all MYCFLAGS="-fPIC -DLUA_USE_POSIX"
 
 solaris:
 	$(MAKE) all MYCFLAGS="-DLUA_USE_POSIX -DLUA_USE_DLOPEN" MYLIBS="-ldl"

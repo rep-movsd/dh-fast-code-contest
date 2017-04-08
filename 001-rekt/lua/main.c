@@ -6,7 +6,7 @@
 
 #include "lsrc.h"
 
-static lua_State *L;
+static lua_State *L = NULL;
 
 #pragma pack(push)
 #pragma pack(1)
@@ -32,10 +32,12 @@ void init(const char *filepath)
 
     luaL_openlibs(L);
 
-    if ( luaL_loadbuffer(L, lsrc, lsrc_len, "main.lua") || lua_pcall(L, 0, 1, 0) ) {
+    if ( luaL_loadbuffer(L, lsrc, lsrc_len, "main.lua") ) {
         fprintf(stderr, "error loading source\n");
         exit(-1);
     }
+
+    lua_call(L, 0, LUA_MULTRET);
 
     /* everything upto this point should work */
 }
