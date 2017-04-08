@@ -50,6 +50,10 @@ rank is an integer, unique for each row, higher rank means lower value.... i.e. 
 
 You are then given a list of rectangles, and for each rectangle, you need to find the 20 highest ranked points in that rectangle, and return their indices in the input file.
 
+A point px,py is inside a rectangle if 
+  rc.lx <= px && px < rc.hx && rc.ly <= py && py < rc.hy
+
+
 Your implementation needs to provide 2 APIs
 
  * init(filename) - reads the input file, sets up any data structures etc.
@@ -65,15 +69,43 @@ It generates (repeatably) random data sets, including the expected answers
 For example running the following:
 
     $ ./generate 1000000 100 -
-    Random seed : 1AAF9E9E-75AA73FC-1544DAA4-53AAD7C5-6C8190A3
+    Random seed : 1AAF9E9E
     Generating 100 rects
     Generating 1000000 points
 
 creates
 
-    1AAF9E9E-75AA73FC-1544DAA4-53AAD7C5-6C8190A3-points.txt  
-    1AAF9E9E-75AA73FC-1544DAA4-53AAD7C5-6C8190A3-rects.txt
-    1AAF9E9E-75AA73FC-1544DAA4-53AAD7C5-6C8190A3-results.txt
+    1AAF9E9E-points.txt  
+    1AAF9E9E-rects.txt
+    1AAF9E9E-results.txt
+
+
+The format of the points file is
+
+    X Y rank
+    X Y rank
+    ...
+
+X and Y are floating point values in the range
+    
+    -10000000000.0 <= val <= 10000000000.0   
+
+
+The rect file has:
+    
+    LX HX LY HY
+    LX HX LY HY
+    ...
+
+They represent the bounds of the rectangle 
+LX <= HX and LY <= HY
+
+The results file has one line for each rect and each line has the rank of upto 20 points separated by a space
+
+   rank1 rank2 ...
+   rank1 rank2 ...
+
+If there are no points in any given rect, the line is blank
 
 
 A runner program is provided that can load a .so that contains your implementation and time and verify your solution 
@@ -86,15 +118,11 @@ You can build the runner and test implementation like this:
 
 Then you can run the test as follows:
 
-    $ ./runner 1AAF9E9E-75AA73FC-1544DAA4-53AAD7C5-6C8190A3 ./librekt.so -
-    Loading points from 1AAF9E9E-75AA73FC-1544DAA4-53AAD7C5-6C8190A3-points.txt
-    Loaded 1000000 points
-    Sorting... done!
-    Processing ...
-    Done ...
+    $ ./runner 1AAF9E9E ./librekt.so -
+    Loading points from 1AAF9E9E-points.txt
     Checking results...OK
-    236 ms elapsed
-    2.36 ms per rect
+    209.534 ms elapsed
+    2.09534 ms per rect
 
 ---
 
