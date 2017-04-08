@@ -32,12 +32,10 @@ void init(const char *filepath)
 
     luaL_openlibs(L);
 
-    if ( luaL_loadbuffer(L, lsrc, lsrc_len, "main.lua") ) {
+    if ( luaL_loadbuffer(L, lsrc, lsrc_len, "main.lua")  || lua_pcall(L, 0, LUA_MULTRET, 0) ) {
         fprintf(stderr, "error loading source\n");
         exit(-1);
     }
-
-    lua_call(L, 0, LUA_MULTRET);
 
     /* everything upto this point should work */
 }
