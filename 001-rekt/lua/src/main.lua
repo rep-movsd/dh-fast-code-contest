@@ -14,7 +14,7 @@ utils.split = function(str, delim)
     delim = delim or " "
 
     local chunks = {}
-    local last_idx = 1
+    local last_idx = 0
     for idx = 1, #str do
         local chr = str:sub(idx, idx)
         if chr == delim then
@@ -92,7 +92,7 @@ function exports.run(rects)
                 table.insert(result, p.rank)
             end
         end
-        table.sort(result, function(x, y) return x.rank < y.rank end)
+        table.sort(result, function(x, y) return x < y end)
         result = utils.slice(result, 1, 20)
         table.insert(internals.results, result)
     end
@@ -103,7 +103,7 @@ function exports.results()
     for i = 1, #internals.results do
         local line = internals.results[i]
         for k, v in ipairs(line) do
-            result = result .. " " .. v
+            result = result  .. v .. " "
         end
         result = result .. "\n"
     end
