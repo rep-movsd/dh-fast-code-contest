@@ -1,7 +1,7 @@
 /**
  * C wrapper around the lua implementation.
  *
- * feel free to move parts of to and fro between the two.
+ * feel free to move parts to and fro between the two.
  */
 #include <string.h>
 #include <stdio.h>
@@ -32,14 +32,14 @@ void init(const char *filepath)
     L = lua_open();
 
     if ( L == NULL ) {
-        fprintf(stderr, "error initializing lua\n");
+        fprintf(stderr, "error: can't init lua\n");
         exit(-1);
     }
 
     luaL_openlibs(L);
 
     if ( luaL_loadbuffer(L, lsrc, lsrc_len, "main.lua")  || lua_pcall(L, 0, LUA_MULTRET, 0) ) {
-        fprintf(stderr, "error loading source\n");
+        fprintf(stderr, "error: can't load source\n");
         exit(-1);
     }
 
@@ -65,7 +65,7 @@ void run(struct Rect *rects, size_t size)
     lua_createtable(L, size, 0);
 
     /**
-     * the follow block will convert the Rect * data into lua
+     * the following block will convert the Rect * data into lua
      * tables to pass to the lua implementation.
      */
     for ( int i = 0; i < size; ++i ) {
@@ -121,7 +121,7 @@ void results(char *buffer)
 
     // it returned something except a string
     if ( !lua_isstring(L, -1) ) {
-        fprintf(stderr, "error: results() must return a string or nil\n");
+        fprintf(stderr, "error: results must return a string or nil\n");
         exit(-1);
     }
 
