@@ -1,5 +1,5 @@
 *.o
-librekt.so
+*.so
 lsrc.h
 *lua
 *luac
