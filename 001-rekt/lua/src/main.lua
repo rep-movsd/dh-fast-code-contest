@@ -15,7 +15,8 @@ utils.split = function(str, delim)
 
     local chunks = {}
     local last_idx = 0
-    for idx = 1, #str do
+    local len = #str
+    for idx = 1, len do
         local chr = str:sub(idx, idx)
         if chr == delim then
             local x = str:sub(last_idx+1, idx-1)
@@ -24,7 +25,7 @@ utils.split = function(str, delim)
         end
     end
 
-    if last_idx ~= #str then
+    if last_idx ~= len then
         table.insert(chunks, str:sub(last_idx))
     end
 
@@ -69,27 +70,59 @@ end
 
   returns the closest index
 ]]
-function approx(vec, value)
+function approx(vec, value, map)
     local start = 1
-    local fin = #vec
+    local len = #vec
+    local fin = len
+    map = map or function(x) return x end
     while true do
         local idx = math.ceil((fin + start)/2)
-        idx = utils.clamp(idx, 1, #vec)
+        idx = utils.clamp(idx, 1, len)
+        local current = map(vec[idx]) 
 
-        if vec[idx].x == value or start > fin then
+        if current == value or start > fin then
             return idx
-        elseif value > vec[idx].x then
+        elseif value > current then
             start = idx + 1
-        elseif value < vec[idx].x then
+        elseif value < current then
             fin = idx - 1
         end 
     end
 end
 
+function map(vec, f)
+    local result = {}
+    for i = 1, #vec do
+        result[i] = f(vec[i])
+    end
+    return result
+end
+
+function stddev(values)
+    -- compute the mean
+    local mean = 0
+    for i = 1, #values do
+        mean = mean + values[i]
+    end
+    mean = mean / #values
+
+    -- compute deviations
+    local deviations = map(values, function(v) return (v - mean)^ 2 end)
+    local variance = 0
+    for i = 1, #deviations do
+        variance = variance + deviations[i]
+    end
+    variance = variance / #deviations
+    
+    -- standard deviation is the square root of variation
+    return math.sqrt(variance)
+end
+
 local exports = {}
 local internals = {
     points = {},
-    results = {}
+    results = {},
+    axis = nil
 }
 
 function exports.init(filename)
@@ -107,8 +140,21 @@ function exports.init(filename)
         table.insert(internals.points, point)
     end
 
+    -- determine what axis to select
+    local xvalues = map(internals.points, function(p) return p.x end)
+    local yvalues = map(internals.points, function(p) return p.y end)
+
+    local xstddev = stddev(xvalues)
+    local ystddev = stddev(yvalues)
+
+    if ( xstddev < ystddev ) then
+        internals.axis = 'x'
+    else
+        internals.axis = 'y'
+    end
+
     local function compare(p1, p2)
-        return p1.x < p2.x
+        return p1[internals.axis] < p2[internals.axis]
     end
 
     table.sort(internals.points, compare)
@@ -118,8 +164,8 @@ function exports.run(rects)
     for i = 1, #rects do 
         local r = rects[i]
         local result = {}
-        local start = approx(internals.points, r.lx)
-        local finish = approx(internals.points, r.hx)
+        local start = approx(internals.points, r.lx, function(p) return p[internals.axis] end)
+        local finish = approx(internals.points, r.hx, function(p) return p[internals.axis] end)
         for j = start, finish do 
             local p = internals.points[j]
             if r.lx <= p.x and p.x <= r.hx and r.ly <= p.y and p.y <= r.hy then
