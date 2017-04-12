@@ -40,16 +40,22 @@ utils.tostring = function(entity)
 
     local str = "{"
     for key, value in pairs(entity) do
-        str = str .. string.format(" %s = %s", key, value) .. ","
+        str = str .. string.format(" %s = %s", key, utils.tostring(value)) .. ","
     end
-    str = str:sub(1, #str-1) .. " }"
+
+    if #str > 1 then
+        str = str:sub(1, #str-1) .. " }"
+    else
+        str = str .. " }"
+    end
+
     return str
 end
 
 utils.slice = function(table, start, last)
     local sub = {}
     for i = start, last do
-        sub[#sub +1] = table[i]
+        table.insert(sub, table[i])
     end
     return sub
 end
