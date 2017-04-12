@@ -54,6 +54,38 @@ utils.slice = function(table, start, last)
     return sub
 end
 
+utils.clamp = function(value, min, max)
+    if value < min then
+        return min
+    elseif value > max then
+        return max
+    else
+        return value
+    end
+end
+
+--[[
+  binary search-a-like
+
+  returns the closest index
+]]
+function approx(vec, value)
+    local start = 1
+    local fin = #vec
+    while true do
+        local idx = math.ceil((fin + start)/2)
+        idx = utils.clamp(idx, 1, #vec)
+
+        if vec[idx].x == value or start > fin then
+            return idx
+        elseif value > vec[idx].x then
+            start = idx + 1
+        elseif value < vec[idx].x then
+            fin = idx - 1
+        end 
+    end
+end
+
 local exports = {}
 local internals = {
     points = {},
@@ -76,7 +108,7 @@ function exports.init(filename)
     end
 
     local function compare(p1, p2)
-        return p1.rank < p2.rank
+        return p1.x < p2.x
     end
 
     table.sort(internals.points, compare)
@@ -86,7 +118,9 @@ function exports.run(rects)
     for i = 1, #rects do 
         local r = rects[i]
         local result = {}
-        for j = 1, #internals.points do 
+        local start = approx(internals.points, r.lx)
+        local finish = approx(internals.points, r.hx)
+        for j = start, finish do 
             local p = internals.points[j]
             if r.lx <= p.x and p.x <= r.hx and r.ly <= p.y and p.y <= r.hy then
                 table.insert(result, p.rank)
