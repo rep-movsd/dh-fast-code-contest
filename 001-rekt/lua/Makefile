@@ -9,7 +9,8 @@ lua:
 	cd ext/lua && $(MAKE) posix
 
 lsrc.h: src/main.lua lua
-	$(shell ext/lua/src/luac -o lsrc src/main.lua)
+	$(shell lua scripts/pack.lua src/main.lua)
+	$(shell ext/lua/src/luac -o lsrc main.bundle.lua)
 	$(shell xxd -i lsrc lsrc.h)
 	$(shell rm -f lsrc)
 
@@ -20,4 +21,4 @@ librekt.so: main.o
 	$(LD) $(LLIB) $^ -shared -o $@ 
 
 clean:
-	rm -f librekt.so *.o *.out lsrc.h
+	rm -f librekt.so *.o *.out lsrc.h *.bundle*
