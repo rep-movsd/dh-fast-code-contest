@@ -2,4 +2,6 @@
 *.so
 lsrc.h
 *lua
+!scripts/*lua
+!src/*lua
 *luac
