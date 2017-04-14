@@ -3,6 +3,7 @@
 ]]
 
 local utils = require "utils.lua"
+local collections = require "collections.lua"
 
 utils.clamp = function(value, min, max)
     if value < min then
