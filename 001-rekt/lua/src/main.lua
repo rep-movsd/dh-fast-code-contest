@@ -3,16 +3,7 @@
 ]]
 
 local utils = require "utils.lua"
-
-utils.clamp = function(value, min, max)
-    if value < min then
-        return min
-    elseif value > max then
-        return max
-    else
-        return value
-    end
-end
+local collections = require "collections.lua"
 
 --[[
   binary search-a-like
@@ -110,20 +101,24 @@ function exports.init(filename)
 end
 
 function exports.run(rects)
+
+    local internals = internals
+    local table_insert = table.insert
+    local approx = approx
+
     for i = 1, #rects do 
         local r = rects[i]
-        local result = {}
+        local result = collections.MagicHeap:new(20)
         local start = approx(internals.points, r.lx, function(p) return p[internals.axis] end)
         local finish = approx(internals.points, r.hx, function(p) return p[internals.axis] end)
         for j = start, finish do 
             local p = internals.points[j]
             if r.lx <= p.x and p.x <= r.hx and r.ly <= p.y and p.y <= r.hy then
-                table.insert(result, p.rank)
+                result:insert(p.rank)
             end
         end
-        table.sort(result, function(x, y) return x < y end)
-        result = utils.slice(result, 1, 20)
-        table.insert(internals.results, result)
+        result = result:sort()
+        table_insert(internals.results, result)
     end
 end
 
