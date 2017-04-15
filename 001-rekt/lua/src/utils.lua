@@ -1,6 +1,5 @@
 local exports = {}
 
-
 --[[
   not the best algorithm to split a string
 ]]
@@ -57,6 +56,16 @@ exports.slice = function(t, start, last)
         table.insert(sub, t[i])
     end
     return sub
+end
+
+exports.clamp = function(value, min, max)
+    if value < min then
+        return min
+    elseif value > max then
+        return max
+    else
+        return value
+    end
 end
 
 return exports
