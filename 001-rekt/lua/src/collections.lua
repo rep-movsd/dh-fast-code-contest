@@ -1,3 +1,6 @@
+
+local utils = require "utils.lua"
+
 local exports = {}
 
 local MagicHeap = {}
@@ -88,6 +91,87 @@ function MagicHeap:sort()
     end
 
     return items
+end
+
+
+local axis_map = {}
+axis_map[0] = 'x'
+axis_map[1] = 'y'
+
+local Node = {}
+Node.__index = Node
+
+function Node:new(point, left, right)
+    local obj = {
+        point = point,
+        left = left,
+        right = right
+    }
+    return setmetatable(obj, self)
+end
+
+function find(tree, rect, callback, depth)
+
+    if tree == nil then
+        return
+    end
+
+    depth = depth or 0
+    local axis = axis_map[depth % 2]
+
+    local p = tree.point
+    local r = rect
+
+    if r.lx <= p.x and p.x <= r.hx and r.ly <= p.y and p.y <= r.hy then
+        callback(p)
+    end
+
+    local max = 'h'..axis
+    local min = 'l'..axis
+   
+    if rect[min] <= p[axis] then
+        find(tree.left, rect, callback, depth +1)
+    end
+
+    if rect[max] > p[axis] then
+        find(tree.right, rect, callback, depth +1)
+    end
+
+end
+
+function Node:find(rect, cb)
+    return find(self, rect, cb)
+end
+
+local Kdtree = {}
+Kdtree.__index = Kdtree
+exports.Kdtree = Kdtree
+function Kdtree:new(points, depth)
+
+    depth = depth or 0
+
+    local len = #points
+
+    if len == 0 then
+        return nil
+    end
+
+    local median = math.ceil(len/2)
+
+    local axis = axis_map[depth % 2]
+
+    table.sort(points, function(x, y) return x[axis] < y[axis] end)
+
+
+    local slice = utils.slice
+    local left_subtree = slice(points, 1, median-1)
+    local right_subtree = slice(points, median+1)
+
+    return Node:new(
+        points[median],
+        Kdtree:new(left_subtree, depth + 1),
+        Kdtree:new(right_subtree, depth + 1)
+    )
 end
 
 return exports
