@@ -5,60 +5,8 @@
 local utils = require "utils.lua"
 local collections = require "collections.lua"
 
---[[
-  binary search-a-like
-
-  returns the closest index
-]]
-function approx(vec, value, map)
-    local start = 1
-    local len = #vec
-    local fin = len
-    map = map or function(x) return x end
-    while true do
-        local idx = math.ceil((fin + start)/2)
-        idx = utils.clamp(idx, 1, len)
-        local current = map(vec[idx]) 
-
-        if current == value or start > fin then
-            return idx
-        elseif value > current then
-            start = idx + 1
-        elseif value < current then
-            fin = idx - 1
-        end 
-    end
-end
-
-function map(vec, f)
-    local result = {}
-    for i = 1, #vec do
-        result[i] = f(vec[i])
-    end
-    return result
-end
-
-function stddev(values)
-    -- compute the mean
-    local mean = 0
-    for i = 1, #values do
-        mean = mean + values[i]
-    end
-    mean = mean / #values
-
-    -- compute deviations
-    local deviations = map(values, function(v) return (v - mean)^ 2 end)
-    local variance = 0
-    for i = 1, #deviations do
-        variance = variance + deviations[i]
-    end
-    variance = variance / #deviations
-    
-    -- standard deviation is the square root of variation
-    return math.sqrt(variance)
-end
-
 local exports = {}
+
 local internals = {
     points = nil,
     results = {},
