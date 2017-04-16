@@ -60,15 +60,15 @@ end
 
 local exports = {}
 local internals = {
-    points = {},
+    points = nil,
     results = {},
-    axis = nil
 }
 
 function exports.init(filename)
 
     assert(filename ~= nil)
 
+    local p = {}
     for line in io.lines(filename) do
         local pdata = utils.split(line)
         local point = {
@@ -77,46 +77,25 @@ function exports.init(filename)
             rank = tonumber(pdata[3]),
         }
 
-        table.insert(internals.points, point)
+        table.insert(p, point)
     end
 
-    -- determine what axis to select
-    local xvalues = map(internals.points, function(p) return p.x end)
-    local yvalues = map(internals.points, function(p) return p.y end)
-
-    local xstddev = stddev(xvalues)
-    local ystddev = stddev(yvalues)
-
-    if ( xstddev < ystddev ) then
-        internals.axis = 'x'
-    else
-        internals.axis = 'y'
-    end
-
-    local function compare(p1, p2)
-        return p1[internals.axis] < p2[internals.axis]
-    end
-
-    table.sort(internals.points, compare)
+    internals.points = collections.Kdtree:new(p)
 end
 
 function exports.run(rects)
 
     local internals = internals
     local table_insert = table.insert
-    local approx = approx
 
     for i = 1, #rects do 
         local r = rects[i]
         local result = collections.MagicHeap:new(20)
-        local start = approx(internals.points, r.lx, function(p) return p[internals.axis] end)
-        local finish = approx(internals.points, r.hx, function(p) return p[internals.axis] end)
-        for j = start, finish do 
-            local p = internals.points[j]
-            if r.lx <= p.x and p.x <= r.hx and r.ly <= p.y and p.y <= r.hy then
-                result:insert(p.rank)
-            end
-        end
+        
+        internals.points:find(r, function(point)
+            result:insert(point.rank)
+        end)
+
         result = result:sort()
         table_insert(internals.results, result)
     end

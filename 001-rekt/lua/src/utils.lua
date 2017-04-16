@@ -48,14 +48,15 @@ exports.tostring = function(entity)
     return str
 end
 
-exports.slice = function(t, start, last)
-    start = start or 1
-    last = last or #t
-    local sub = {}
-    for i = start, last do
-        table.insert(sub, t[i])
+exports.slice = function(t, i, j)
+    i = i or 1
+    j = j or #t
+    local obj = {}
+    while ( i <= j ) do
+        table.insert(obj, t[i])
+        i = i + 1
     end
-    return sub
+    return obj
 end
 
 exports.clamp = function(value, min, max)
