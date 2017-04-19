@@ -106,20 +106,7 @@ int main(int argc, char** argv)
   const float r = 1e3;
   Rect rcMain = xrandom(-r, +r, -r, +r);
   
-  vector<Rect> arrRects;
-  if(nRects)
-  {
-    printf("Generating %u rects\n", nRects);
-    
-    ofstream ofs(sGUID + "-rects.txt");
-    for(int i = 0; i < nRects; ++i)
-    {
-      const Rect &r = xrandom(rcMain.lx, rcMain.hx, rcMain.ly, rcMain.hy);
-      arrRects.push_back(r);
-      ofs << setprecision(8) << fixed << r.lx << " " << r.hx << " " << r.ly << " " << r.hy << "\n";
-    }
-    
-  }
+  
     
   if(nPoints)
   {
@@ -186,6 +173,26 @@ int main(int argc, char** argv)
     }
     while(0);
     
+    // reset the seed (with a twist) to ensure you always get the same rects for any number of points
+    seed ^= 0xAAAAAAAA;
+    rnd.seed(seed);
+    
+    cerr <<  xrandom() << endl;
+    
+    vector<Rect> arrRects;
+    if(nRects)
+    {
+      printf("Generating %u rects\n", nRects);
+      
+      ofstream ofs(sGUID + "-rects.txt");
+      for(int i = 0; i < nRects; ++i)
+      {
+        const Rect &r = xrandom(rcMain.lx, rcMain.hx, rcMain.ly, rcMain.hy);
+        arrRects.push_back(r);
+        ofs << setprecision(8) << fixed << r.lx << " " << r.hx << " " << r.ly << " " << r.hy << "\n";
+      }
+    }
+    
     if(nRects)
     {
       // Reload our own file
@@ -218,7 +225,7 @@ int main(int argc, char** argv)
           if(arrResults[n].size() < 20)
           {
             //bool isIn = rc.lx <= i->x && i->x < rc.hx && rc.ly <= i->y && i->y < rc.hy;
-            //if(isIn)
+            
             if(0x05 == _mm_movemask_ps(v4pt >= v4RC))
             {
               arrResults[n].push_back(id);
