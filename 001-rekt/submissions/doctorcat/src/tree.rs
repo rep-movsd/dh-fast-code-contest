@@ -1,7 +1,9 @@
 // range tree WIP
 // Static, only bulk insertion supported.
 use rpoint::RPoint;
+use std::cmp::Ordering;
 use std::f32;
+
 
 // A slab is bounded only in the x-directions.
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
@@ -19,8 +21,6 @@ pub struct Bucket{
     active: bool,
     // y-sorted points in the bucket
     y_points: Vec<RPoint>,
-    // rank-sorted points in the bucket
-    r_points: Vec<RPoint>,
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, PartialOrd)]
@@ -29,13 +29,24 @@ pub struct Bucket{
 pub struct BucketRef{
     min_active: f32,
     max_active: f32,
+    x1: f32,
+    x2: f32,
     idx: usize,
 }
+
+impl Eq for BucketRef {}
+
+impl Ord for BucketRef{
+    fn cmp(&self, other: &BucketRef) -> Ordering{
+        self.partial_cmp(other).unwrap()
+    }
+}
+
 
 #[derive(Debug, Clone)]
 // A VEB search tree
 pub struct VTree<T: PartialOrd> {
-    summary: Option<Box<VTree<T>>>,
+    summary: Option<Vec<T>>,
     clusters: Option<Vec<VTree<T>>>,
     min: T,
     max: Option<T>,
@@ -46,53 +57,48 @@ pub struct VTree<T: PartialOrd> {
 // A Tree data structure for 3-sided range queries
 #[derive(Debug, Clone)]
 pub struct SecondaryTree {
-    slabs: Box<VTree<Slab>>,
+    slabs: Vec<Slab>,
+    bucketrefs: Vec<BucketRef>,
     intervals: Vec<VTree<BucketRef>>,
     buckets: Vec<Bucket>,
-    clusters: Vec<SecondaryTree>,
-    size: usize,
-    chunk_size: usize,
-}
-
-// RangeTree for 4-sided queries.
-#[derive(Debug, Clone)]
-pub struct RangeTree {
-    summary: Box<RangeTree>,
-    clusters: Vec<RangeTree>,
-    secondary: SecondaryTree,
-    // stores min and max of x-coordinate.
-    min: f32,
-    max: f32,
+    clusters: Option<Vec<SecondaryTree>>,
     size: usize,
     chunk_size: usize,
 }
 
 impl SecondaryTree where {
-    pub fn new(points: &mut Vec<RPoint>) -> SecondaryTree{
-        println!{"{:?}", points};
+    pub fn new() -> SecondaryTree{
+        SecondaryTree {
+            slabs: Vec::new(),
+            bucketrefs: Vec::new(),
+            intervals: Vec::new(),
+            buckets: Vec::new(),
+            clusters: None,
+            size: 0,
+            chunk_size:0
+        }
+    }
+
+    pub fn bulk_insert(&mut self, points: &mut Vec<RPoint>){
+        // println!("{:?}", points);
         let p_len = points.len();
         if p_len < 1 {
-            panic!("need at least one point.");
+            panic!("Should have at least one point.")
         }
-        if p_len == 1 {
-            panic!("i don't know what to do with 1 point yet");
+
+        let mut chunk_size = chunk_size(p_len);
+        if p_len == 2 {
+            chunk_size -= 1;
         }
-        let chunk_size = chunk_size(p_len);
 
         // Create initial slabs and buckets.
         // They represent/contain ~sqrt(n) points each.
         // Points get sorted by x.
         let (slab_vec, mut bucket_vec, mut bucketref_vec) = chunk_points(
             points, chunk_size);
-
         // Sweep upwards to create new buckets.
         // We have ~2 * sqrt(n) - 1 buckets after this.
         sweep(points, &mut bucket_vec, &mut bucketref_vec, chunk_size);
-        println!{"{:?}", bucket_vec};
-
-        // Insert slabs into slabtree.
-        let slabtree: Box<VTree<Slab>> = Box::new(VTree::new(&slab_vec));
-        println!{"{:?}", slabtree};
 
         // Find buckets spanning slab and insert in buckettree.
         let mut intervals = Vec::with_capacity(chunk_size);
@@ -108,28 +114,50 @@ impl SecondaryTree where {
             let buckettree = VTree::new(&slab_buckets);
             intervals.push(buckettree);
         }
-        println!{"{:?}", intervals};
+        // println!("Buckets: {:?}", bucket_vec);
+        if p_len < 30 {
+            self.slabs = slab_vec;
+            self.bucketrefs = bucketref_vec;
+            self.intervals = intervals;
+            self.buckets = bucket_vec;
+            self.clusters = None;
+            self.size = p_len;
+            self.chunk_size = p_len;
+            return;
+        }
 
         // Recursively define rest of secondary trees
         let mut children = Vec::with_capacity(2*chunk_size);
-        if p_len > 1 {
-            for bucket in &bucket_vec {
-                let mut bpoints = bucket.r_points.clone();
-                let child = SecondaryTree::new(&mut bpoints);
-                children.push(child);
-            }
+        for bucket in &bucket_vec {
+            let mut bpoints = bucket.y_points.clone();
+            let mut child = SecondaryTree::new();
+            child.bulk_insert(&mut bpoints);
+            children.push(child);
         }
 
         // Join together results to return secondary tree
-        SecondaryTree {
-            slabs: slabtree,
-            intervals: intervals,
-            clusters: children,
-            buckets: bucket_vec,
-            size: p_len,
-            chunk_size: chunk_size,
+        self.slabs = slab_vec;
+        self.bucketrefs = bucketref_vec;
+        self.intervals = intervals;
+        self.clusters = Some(children);
+        self.buckets = bucket_vec;
+        self.size = p_len;
+        self.chunk_size = chunk_size;
+    }
+
+    pub fn search(&self, x1: f32, x2: f32, y1: f32) -> Vec<RPoint>{
+        let relevant = &self.bucketrefs.iter()
+            .filter(|p| p.x1 >= x1 && p.x2 <= x2
+                    && y1 >= p.min_active && y1 <= p.max_active)
+            .collect::<Vec<&BucketRef>>();
+        let mut points = Vec::with_capacity(20000);
+        for r in relevant{
+            let ref buckets = self.buckets;
+            points.extend(&buckets[r.idx].y_points);
         }
-     }
+        // Incomplete. Recurse into leftmost and rightmost buckets
+        return points;
+    }
 }
 
 fn chunk_points(points: &mut Vec<RPoint>, chunk_size: usize)
@@ -155,6 +183,8 @@ fn chunk_points(points: &mut Vec<RPoint>, chunk_size: usize)
         let bucketref = BucketRef {
             min_active: bucket.y1,
             max_active: f32::MAX,
+            x1: xlow,
+            x2: xhigh,
             idx: idx,
         };
         bucket_vec.push(bucket);
@@ -170,7 +200,9 @@ fn sweep(points: &mut Vec<RPoint>, mut bucket_vec: &mut Vec<Bucket>,
     points.sort_by((|a, b|
                     a.y.partial_cmp(&b.y).unwrap()));
     let mut act = active_buckets.clone();
-    for p in points {
+    let iter_chunks = if points.len() >= 10000 {chunk_size} else {1};
+    for chunk in points.chunks(iter_chunks) {
+        let p = chunk[0];
         let y_coord = p.y;
         if act.len() == 1 {break;}
         act = sweep_step(y_coord,
@@ -180,7 +212,6 @@ fn sweep(points: &mut Vec<RPoint>, mut bucket_vec: &mut Vec<Bucket>,
                          chunk_size);
     }
 }
-
 
 fn sweep_step(y_coord: f32, active_buckets: Vec<usize>, mut bucket_vec: &mut Vec<Bucket>,
               mut bref_vec: &mut Vec<BucketRef>, chunk_size: usize) -> Vec<usize> {
@@ -212,9 +243,20 @@ fn sweep_step(y_coord: f32, active_buckets: Vec<usize>, mut bucket_vec: &mut Vec
             bucket_vec[bj_idx].active = false;
             bref_vec[bi_idx].max_active = y_coord;
             bref_vec[bj_idx].max_active = y_coord;
-            let mut ypoints = bucket_vec[bi_idx].y_points.clone();
-            ypoints.extend(bucket_vec[bj_idx].y_points.clone());
+            let mut ypoints = bucket_vec[bi_idx]
+                .y_points
+                .iter()
+                .cloned()
+                .filter(|p| p.y >= y_coord)
+                .collect::<Vec<RPoint>>();
 
+            ypoints.extend(bucket_vec[bj_idx]
+                           .y_points
+                           .iter()
+                           .cloned()
+                           .filter(|p| p.y >= y_coord)
+                           .collect::<Vec<RPoint>>());
+            ypoints.sort_by(|a, b| a.y.partial_cmp(&b.y).unwrap());
             let x1 = bucket_vec[bi_idx].x1;
             let x2 = bucket_vec[bj_idx].x2;
             let bucket = Bucket::new_active(x1, x2, y_coord, &ypoints);
@@ -223,6 +265,8 @@ fn sweep_step(y_coord: f32, active_buckets: Vec<usize>, mut bucket_vec: &mut Vec
             let bucketref = BucketRef {
                 min_active: y_coord,
                 max_active: f32::MAX,
+                x1: x1,
+                x2: x2,
                 idx: idx,
             };
             bref_vec.push(bucketref);
@@ -238,12 +282,11 @@ fn sweep_step(y_coord: f32, active_buckets: Vec<usize>, mut bucket_vec: &mut Vec
         ac_i += 1;
         ac_j += 1;
     }
-    // println!("{:?}", act);
     return act;
 }
 
 fn chunk_size(len: usize) -> usize {
-    (len as f64).sqrt() as usize
+    (len as f32).sqrt().ceil() as usize
 }
 
 impl Bucket {
@@ -252,15 +295,12 @@ impl Bucket {
         let mut y_points = points.clone();
         y_points.sort_by(|a, b| a.y.partial_cmp(&b.y).unwrap());
         let y1 = y_points.first().unwrap().y;
-        let mut r_points = points.clone();
-        r_points.sort_by_key(|a| a.rank);
         Bucket {
             x1: x1,
             x2: x2,
             y1: y1,
             active: activity,
             y_points: y_points,
-            r_points: r_points,
         }
     }
 
@@ -268,15 +308,12 @@ impl Bucket {
                      points: &Vec<RPoint>) -> Bucket {
         let mut y_points = points.clone();
         y_points.sort_by(|a, b| a.y.partial_cmp(&b.y).unwrap());
-        let mut r_points = points.clone();
-        r_points.sort_by_key(|a| a.rank);
         Bucket {
             x1: x1,
             x2: x2,
             y1: y1,
             active: true,
             y_points: y_points,
-            r_points: r_points,
         }
     }
 }
@@ -318,14 +355,14 @@ impl<T: PartialOrd + Clone> VTree<T>{
                 let mut sum_vec = Vec::with_capacity(chunk_size);
                 for chunk in xs[1..len-1].chunks(chunk_size) {
                     let min = chunk.first().unwrap().clone();
+                    let subtree = VTree::new(chunk);
                     sum_vec.push(min);
-                    cluster.push(VTree::new(chunk));
+                    cluster.push(subtree);
                 }
-                let summary = Box::new(VTree::new(&sum_vec));
                 VTree {
                     min: mint,
                     max: Some(maxt),
-                    summary: Some(summary),
+                    summary: Some(sum_vec),
                     clusters: Some(cluster),
                     size: n,
                     chunk_size: chunk_size,
@@ -333,13 +370,51 @@ impl<T: PartialOrd + Clone> VTree<T>{
             }
         }
     }
-}
 
+    fn lookup_lower<F>(&self, x: f32, mut f: F) -> Option<&T>
+        where F: FnMut(&T) -> f32
+    {
+        let minkey = f(&self.min);
+        if x < minkey {
+            return None;
+        }
+
+        match self.size {
+            1 => Some(&self.min),
+            2 => {
+                let m = self.max.as_ref().unwrap();
+                let maxkey = f(m);
+                if x >= maxkey { Some(m) } else { Some(&self.min) }
+            },
+            _ => {
+                let m = self.max.as_ref().unwrap();
+                let maxkey = f(m);
+                if x >= maxkey {Some(m)} else {
+                    let clusters = self.clusters.as_ref().unwrap();
+                    // kind of missing the point
+                    let sumres = self.summary.as_ref().unwrap().binary_search_by(
+                        |p| f(p).partial_cmp(&x).unwrap());
+                    match sumres {
+                        Ok(n) => clusters[n].lookup_lower(x, f),
+                        Err(0) => Some(&self.min),
+                        Err(n) => clusters[n - 1].lookup_lower(x, f),
+                    }
+                }
+            }
+        }
+    }
+}
 
 #[cfg(test)]
 mod tests {
-    use tree::*;
+    extern crate test;
+    use super::*;
     use rpoint::RPoint;
+    use rand::Rng;
+    use std::f32;
+    use std::__rand::thread_rng;
+    use std::time::SystemTime;
+    use test::Bencher;
 
     quickcheck! {
         // Around sqrt(n) slabs and buckets should get created initially
@@ -347,9 +422,9 @@ mod tests {
             let chunk_size = chunk_size(xs.len());
             let mut ps = xs.clone();
             let (svec, bvec, bref_vec) = chunk_points(&mut ps, chunk_size);
-            bvec.len() >= chunk_size
+            bvec.len() <= chunk_size
                 && bref_vec.len() == bvec.len()
-                && svec.len() >= chunk_size
+                && svec.len() <= chunk_size
         }
 
         // Inserted point must lie in one of the initial slabs or buckets
@@ -359,7 +434,7 @@ mod tests {
             ps.push(x);
 
             let chunk_size = chunk_size(ps.len());
-            let (svec, bvec, brefvec) = chunk_points(&mut ps, chunk_size);
+            let (svec, bvec, _) = chunk_points(&mut ps, chunk_size);
 
             let s_count = svec.iter()
                 .filter(|s| p.x >= s.x1 && p.x <= s.x2)
@@ -379,7 +454,7 @@ mod tests {
         fn prop_sweep_step_size_decrease(xs: Vec<RPoint>) -> bool {
             let chunk_size = chunk_size(xs.len());
             let mut ps = xs.clone();
-            let (svec, mut bvec, mut bref_vec) = chunk_points(&mut ps, chunk_size);
+            let (_ , mut bvec, mut bref_vec) = chunk_points(&mut ps, chunk_size);
             let active_buckets = (0..bvec.len())
                 .collect::<Vec<usize>>()
                 .to_vec();
@@ -396,19 +471,41 @@ mod tests {
             let len = xs.len();
             let chunk_size = chunk_size(len);
             let mut ps = xs.clone();
-            let (svec, mut bvec, mut bref_vec) = chunk_points(&mut ps,
+            let (_, mut bvec, mut bref_vec) = chunk_points(&mut ps,
                                                               chunk_size);
             println!("Points:{} Initial Buckets: {} Chunksize {}",
                      len, bvec.len(), chunk_size);
             sweep(&mut ps, &mut bvec, &mut bref_vec, chunk_size);
             println!("Buckets: {} {:?}", bvec.len(), bvec);
             // Investigate what this invariant should actually be
-            if len > 1 {
-                bvec.len() >= (2 * chunk_size - 1)
+            if len > 0 {
+                bvec.len() <= (2 * chunk_size - 1)
             }
             else { true }
         }
 
+        // Buckets should have at least one point
+        fn prop_bucket_size(xs: Vec<RPoint>) -> bool {
+            let len = xs.len();
+            if len == 0 {return true;}
+            let chunk_size = chunk_size(len);
+            let mut ps = xs.clone();
+            let (_, mut bvec, mut bref_vec) = chunk_points(&mut ps,
+                                                           chunk_size);
+            println!("Points:{} Initial Buckets: {} Chunksize {}",
+                     len, bvec.len(), chunk_size);
+            sweep(&mut ps, &mut bvec, &mut bref_vec, chunk_size);
+            println!("Buckets: {} {:?}", bvec.len(), bvec);
+            // Investigate what this invariant should actually be
+            let mut res = true;
+            for b in bvec {
+                println!("{:?}", b);
+                res = res && b.y_points.len() >= 1;
+            }
+            res
+        }
+
+        // just check for crashes
         fn vtree_create(xs: Vec<f32>) -> bool {
             if xs.len() == 0 { return true; }
             let mut ps = xs.clone();
@@ -419,13 +516,49 @@ mod tests {
             return true;
         }
 
+        // just check for crashes
         fn secondary_tree_create(xs: Vec<RPoint>) -> bool {
-            if xs.len() == 0 { return true; }
+            if xs.len() <= 2 { return true; }
             let mut ps = xs.clone();
-            println!("{:?}", ps);
-            let tree = SecondaryTree::new(&mut ps);
+            println!("");
+            let mut tree = SecondaryTree::new();
+            tree.bulk_insert(&mut ps[0..2].to_vec());
             println!("{:?}", tree);
             return true;
         }
+
+        fn prop_chunk_size(x: usize) -> bool {
+            chunk_size(x) >= ((x as f32).sqrt() as usize)
+        }
+
+        // Element in tree should be found.
+        fn vtree_lookup_lower(xs: Vec<f32>) -> bool {
+            if xs.len() == 0 { return true; }
+            let mut ps = xs.clone();
+            let elem = thread_rng().choose(&xs).unwrap();
+            ps.sort_by(|a, b| a.partial_cmp(&b).unwrap());
+            println!("Searching for {} in {:?}", elem, ps);
+            let tree = VTree::new(&ps);
+            println!("{:?}", tree);
+            let now = SystemTime::now();
+            let res = tree.lookup_lower(*elem + f32::MIN_POSITIVE, |x| *x);
+            println!("Time taken for lookup for {} elements: {}", xs.len(),
+                     now.elapsed().unwrap().subsec_nanos());
+            println!("{:?}", res);
+            elem.eq(res.unwrap())
+        }
+    }
+
+    #[bench]
+    fn vtree_lookup_bench(b: &mut Bencher) {
+        let ref mut rng = thread_rng();
+        let mut vec = Vec::with_capacity(1024);
+        for _ in 0..1000000{
+            vec.push(rng.next_f32());
+        }
+        vec.sort_by(|a, b| a.partial_cmp(&b).unwrap());
+        let tree = VTree::new(&vec);
+        let elem = rng.choose(&vec).unwrap();
+        b.iter(|| tree.lookup_lower(*elem, |x| *x));
     }
 }

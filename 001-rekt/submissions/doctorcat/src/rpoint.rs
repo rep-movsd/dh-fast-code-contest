@@ -1,11 +1,9 @@
-extern crate nalgebra as na;
 #[cfg(test)]
 extern crate quickcheck;
-extern crate spade;
 
 #[cfg(test)]
 use quickcheck::Arbitrary;
-use spade::{TwoDimensional, PointN};
+use rtree::{TwoDimensional, PointN};
 use std::fmt;
 
 // Points
@@ -41,6 +39,10 @@ impl PointN for RPoint where {
             1 => &mut self.y,
             _ => panic!("Index out of bounds."),
         }
+    }
+    #[inline]
+    fn rank(&self) -> u32{
+        self.rank
     }
 }
 
