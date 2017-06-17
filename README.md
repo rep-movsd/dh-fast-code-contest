@@ -14,7 +14,8 @@ The challenge remains open - if you submit a solution 10% faster on average than
 ###  Contest #2:
 PALT
 
-
+Officially starts on July 1st
+You can start working on it as soon as possible
 
 
 
