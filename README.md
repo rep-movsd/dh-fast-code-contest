@@ -7,8 +7,14 @@ Fastest code wins - because whats the point of correct code if it misses the bus
 ###  Contest #1:
 REKT 
 
-April 1st to 30th 2017 
+Contest Phase 1 concluded
 
-1 week grace period for stragglers
+The challenge remains open - if you submit a solution 10% faster on average than the current winners, you can win a small prize (upto one prize a week)
+
+###  Contest #2:
+PALT
+
+
+
 
 
