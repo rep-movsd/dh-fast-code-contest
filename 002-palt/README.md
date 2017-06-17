@@ -1,7 +1,6 @@
 
 #### Intro
 
-
 A simple problem statement and test data provided and you have 4 weeks in which you can submit as many solutions as you like.
 
 A monetary prize will be given to the winners (maximum two winners) - Amounts will be discussed on the slack channel
@@ -17,9 +16,6 @@ Multiprocessing of any kind is not allowed - Solutions will be tested on a singl
 If you are in category 1, you will have to create a shared object .so that can be called from a C program, so that we need not write a testing harness for every language.
 
 Category 2 will need individual test scripts that we will write for each language.
-
-We are keeping 2 classes because otherwise the compiled solutions will always dominate. 
-There is no rule you have to use 1 language for all your submissions, feel free to switch
 
 At the end the absolutely fastest code submission per person is only considered  and the top winner in each class wins half the prize money.
 
