@@ -95,29 +95,30 @@ The winner is the program that runs the fastest and gives least error, calculate
 The minimum error possible for any palette is what the reference program above generates.
 Assume your entry takes time T and has average pixel error E, let reference error be R
 
-Let (1 - R) be the accuracy ratio of the reference (call it Q)
-Let (1 - E) be the accuracy ratio of your implementation (call it P)
+    Let (1 - R) be the accuracy ratio of the reference (call it Q)
+    Let (1 - E) be the accuracy ratio of your implementation (call it P)
+    T is multipled by P/Q to get your final time 
 
-T is divided by P/Q to get your final time 
 The logic being that less accurate results are penalized proportionally
+If your implementation accuracy matches the reference then the penalty 
 
 For example lets say: 
     
     Reference produces an error (R) of 9.12% i.e. 0.0912  
-    Implementation 1 produces an error (E1) of 12.1% i.e. 0.0121 and takes 10 seconds
-    Implementation 2 produces an error (E2) of 10.3% i.e. 0.0103 and takes 11 seconds
+    Implementation 1 produces an error (E1) of 13% i.e. 0.13 and takes 10 seconds
+    Implementation 2 produces an error (E2) of 10% i.e. 0.10 and takes 10.2 seconds
 
     Q = 1 - R = 0.9088
-    P1 = 1 - E1 = 0.879
-    P2 = 1 - E2 = 0.897
+    P1 = 1 - E1 = 0.87
+    P2 = 1 - E2 = 0.90
 
-    Accuracy ratio for P1 = P1/Q = 0.799
-    Accuracy ratio for P2 = P2/Q = 0.717
+    Accuracy ratio for P1 = P1/Q = 0.957
+    Accuracy ratio for P2 = P2/Q = 0.990
 
 Adjusted times are
 
-    Implementation 1 => 10 * 0.799 = 7.90
-    Implementation 2 => 11 * 0.717 = 7.89
+    Implementation 1 => 10.0 / 0.957 = 10.45
+    Implementation 2 => 10.2 / 0.990 = 10.30
 
 So implementation 2 wins
  
