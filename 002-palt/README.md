@@ -102,20 +102,22 @@ T is divided by P/Q to get your final time
 The logic being that less accurate results are penalized proportionally
 
 For example lets say: 
-Reference produces an error (R) of 9.12% i.e. 0.0912  
-Implementation 1 produces an error (E1) of 12.1% i.e. 0.0121 and takes 10 seconds
-Implementation 2 produces an error (E2) of 10.3% i.e. 0.0103 and takes 11 seconds
+    
+    Reference produces an error (R) of 9.12% i.e. 0.0912  
+    Implementation 1 produces an error (E1) of 12.1% i.e. 0.0121 and takes 10 seconds
+    Implementation 2 produces an error (E2) of 10.3% i.e. 0.0103 and takes 11 seconds
 
-Q = 1 - R = 0.9088
-P1 = 1 - E1 = 0.879
-P2 = 1 - E2 = 0.897
+    Q = 1 - R = 0.9088
+    P1 = 1 - E1 = 0.879
+    P2 = 1 - E2 = 0.897
 
-Accuracy ratio for P1 = P1/Q = 0.799
-Accuracy ratio for P2 = P2/Q = 0.717
+    Accuracy ratio for P1 = P1/Q = 0.799
+    Accuracy ratio for P2 = P2/Q = 0.717
 
 Adjusted times are
-Implementation 1 => 10 * 0.799 = 7.90
-Implementation 2 => 11 * 0.717 = 7.89
+
+    Implementation 1 => 10 * 0.799 = 7.90
+    Implementation 2 => 11 * 0.717 = 7.89
 
 So implementation 2 wins
  
