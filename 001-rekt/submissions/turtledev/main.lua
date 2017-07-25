@@ -281,6 +281,15 @@ __luapack_modules__ = {
         
             local p = tree[0].point
             local r = rect
+            local box = tree.bounding_box;
+        
+            --[[
+                 if the bounding box of this node does not collide with query,
+                 then skip this subtree
+            ]]
+            if box.lx > r.hx or box.hx < r.lx or box.ly > r.hy or box.hy < r.ly then
+                return
+            end
         
             if r.lx <= p.x and p.x < r.hx and r.ly <= p.y and p.y < r.hy then
                 heap:insert(p.rank)
@@ -332,9 +341,24 @@ __luapack_modules__ = {
             local base = points[start]
             ffi.C.qsort(base, len, ffi.sizeof('Point'), cmp)
         
+            local lx, ly = points[median].x, points[median].y
+            local hx, hy = lx, ly
+        
+            for i = start, fin -1 do
+                if points[i].x < lx then lx = points[i].x end
+                if points[i].y < ly then ly = points[i].y end
+                if points[i].x > hx then hx = points[i].x end
+                if points[i].y > hy then hy = points[i].y end
+            end
+        
             local node = ffi.C.malloc(ffi.sizeof('Node'))
         
             node = ffi.cast('Node *', node)
+            node.bounding_box.lx = lx;
+            node.bounding_box.ly = ly;
+            node.bounding_box.hx = hx;
+            node.bounding_box.hy = hy;
+        
             node[0].point = points[median]
             node[0].left = load_tree(points, start, median, depth + 1)
             node[0].right = load_tree(points, median+1, fin, depth + 1)
