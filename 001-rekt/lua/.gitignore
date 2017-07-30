@@ -1,5 +1,7 @@
 *.o
-librekt.so
+*.so
 lsrc.h
 *lua
+!scripts/*lua
+!src/*lua
 *luac
